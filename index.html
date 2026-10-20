@@ -41,6 +41,10 @@
   .switch button{border:0;background:transparent;padding:7px 14px;border-radius:999px;
     font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s;}
   .switch button.on{background:var(--green);color:#fff;}
+  .top-right{display:flex;align-items:center;gap:8px;}
+  .logout{border:1px solid var(--line);background:var(--paper);color:var(--muted);
+    font-size:12px;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer;transition:.2s;}
+  .logout:hover{color:var(--red);border-color:var(--red);}
 
   /* 视图 */
   .view{display:none;flex-direction:column;flex:1;padding:20px;}
@@ -49,6 +53,17 @@
   .eyebrow{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:700;margin-bottom:6px;}
   .hello{font-family:"Noto Serif SC",serif;font-size:26px;font-weight:900;color:var(--green-deep);line-height:1.3;}
   .date-line{font-size:13px;color:var(--muted);margin:6px 0 18px;}
+
+  /* 登录页 */
+  .login-wrap{padding:64px 28px 20px;text-align:center;display:flex;flex-direction:column;gap:12px;}
+  .login-logo{font-family:"Noto Serif SC",serif;font-size:36px;font-weight:900;color:var(--green-deep);letter-spacing:3px;}
+  .login-sub{font-size:14px;color:var(--muted);line-height:1.6;}
+  .login-desc{font-size:13px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-top:6px;}
+  .login-btn{margin-top:14px;border:0;border-radius:16px;background:var(--green);color:#fff;
+    font-size:17px;font-weight:900;padding:17px;cursor:pointer;box-shadow:0 6px 0 var(--green-deep);transition:.15s;}
+  .login-btn.alt{background:var(--card);color:var(--green-deep);border:1.5px solid var(--green);box-shadow:0 6px 0 rgba(47,93,80,.25);}
+  .login-btn:active{transform:translateY(4px);box-shadow:0 2px 0 transparent;}
+  .login-note{font-size:11px;color:var(--muted);margin-top:10px;}
 
   /* 老人端：提醒大卡 */
   .remind{background:linear-gradient(135deg,var(--green) 0%,var(--green-deep) 100%);color:#fff;
@@ -139,14 +154,29 @@
       <h1>安享晨光</h1>
       <small>用药与血压守护</small>
     </div>
-    <div class="switch">
-      <button id="tabElderly" class="on" onclick="go('elderly')">老人端</button>
-      <button id="tabFamily" onclick="go('family')">家属端</button>
+    <div class="top-right">
+      <div class="switch">
+        <button id="tabElderly" class="on" onclick="go('elderly')">老人端</button>
+        <button id="tabFamily" onclick="go('family')">家属端</button>
+      </div>
+      <button id="btnLogout" class="logout" style="display:none;" onclick="logout()">退出</button>
     </div>
   </div>
 
+  <!-- ===================== 登录页 ===================== -->
+  <section class="view active" id="view-login">
+    <div class="login-wrap">
+      <div class="login-logo">安享晨光</div>
+      <div class="login-sub">独居老人用药与血压智能守护系统</div>
+      <div class="login-desc">无感化交互 · 数据自动闭环</div>
+      <button class="login-btn" onclick="login('elderly')">我是老人 / 照护者</button>
+      <button class="login-btn alt" onclick="login('family')">我是家属 / 子女</button>
+      <div class="login-note">选择身份即可进入 · 数据仅保存在本机浏览器</div>
+    </div>
+  </section>
+
   <!-- ===================== 老人端 ===================== -->
-  <section class="view active" id="view-elderly">
+  <section class="view" id="view-elderly">
     <div class="eyebrow">今日守护</div>
     <div class="hello" id="helloText">早上好，张爷爷</div>
     <div class="date-line" id="dateLine"></div>
@@ -256,6 +286,7 @@ function go(v){
   $("view-family").classList.toggle("active", v==="family");
   $("tabElderly").classList.toggle("on", v==="elderly");
   $("tabFamily").classList.toggle("on", v==="family");
+  if(v==="elderly") renderElderly();
   if(v==="family") renderFamily();
 }
 
@@ -387,8 +418,32 @@ function drawChart(){
   });
 }
 
+/* ---------------- 登录 ---------------- */
+function login(role){
+  state.role=role; save();
+  $("view-login").classList.remove("active");
+  $("btnLogout").style.display="block";
+  go(role);
+  toast(role==="elderly"?"欢迎回来，张爷爷":"欢迎回来，家属");
+}
+function logout(){
+  delete state.role; save();
+  $("view-login").classList.add("active");
+  $("view-elderly").classList.remove("active");
+  $("view-family").classList.remove("active");
+  $("tabElderly").classList.remove("on");
+  $("tabFamily").classList.remove("on");
+  $("btnLogout").style.display="none";
+}
+
 /* ---------------- 初始化 ---------------- */
-renderElderly();
+if(state.role){ // 已登录过，直接进入对应端
+  $("view-login").classList.remove("active");
+  $("btnLogout").style.display="block";
+  go(state.role);
+}else{
+  renderElderly();
+}
 </script>
 </body>
 </html>
