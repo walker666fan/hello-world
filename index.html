@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安享晨光 · 独居老人用药与血压守护</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --paper:#F6F1E8;
+    --card:#FFFDF8;
+    --green:#2F5D50;
+    --green-deep:#22453B;
+    --gold:#D9A441;
+    --gold-soft:#F0DFC0;
+    --ink:#2A2E2B;
+    --muted:#6E7168;
+    --line:#E4DCC9;
+    --red:#C2574A;
+    --red-soft:#F6E3DF;
+    --ok:#3E7C59;
+    --ok-soft:#E2EFE6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#E9E2D3;color:var(--ink);
+    font-family:"Noto Sans SC",system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+
+  /* ===== 桌面衬底：把应用居中成"手机"宽度 ===== */
+  .stage{width:100%;max-width:440px;min-height:100vh;background:var(--paper);
+    box-shadow:0 0 40px rgba(60,50,30,.18);display:flex;flex-direction:column;}
+
+  /* 顶栏 */
+  .topbar{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);background:var(--card);}
+  .brand{display:flex;align-items:baseline;gap:8px;}
+  .brand h1{font-family:"Noto Serif SC",serif;font-size:20px;font-weight:900;color:var(--green-deep);letter-spacing:1px;}
+  .brand small{font-size:11px;color:var(--muted);}
+  .switch{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px;}
+  .switch button{border:0;background:transparent;padding:7px 14px;border-radius:999px;
+    font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:.2s;}
+  .switch button.on{background:var(--green);color:#fff;}
+
+  /* 视图 */
+  .view{display:none;flex-direction:column;flex:1;padding:20px;}
+  .view.active{display:flex;}
+
+  .eyebrow{font-size:12px;letter-spacing:2px;color:var(--gold);font-weight:700;margin-bottom:6px;}
+  .hello{font-family:"Noto Serif SC",serif;font-size:26px;font-weight:900;color:var(--green-deep);line-height:1.3;}
+  .date-line{font-size:13px;color:var(--muted);margin:6px 0 18px;}
+
+  /* 老人端：提醒大卡 */
+  .remind{background:linear-gradient(135deg,var(--green) 0%,var(--green-deep) 100%);color:#fff;
+    border-radius:20px;padding:22px 20px;box-shadow:0 10px 24px rgba(34,69,59,.25);}
+  .remind .tag{display:inline-block;font-size:12px;background:rgba(255,255,255,.18);
+    padding:4px 10px;border-radius:999px;margin-bottom:12px;}
+  .remind .med-name{font-family:"Noto Serif SC",serif;font-size:24px;font-weight:900;}
+  .remind .voice{font-size:14px;opacity:.9;margin-top:8px;line-height:1.6;}
+  .remind .big-btn{margin-top:18px;width:100%;border:0;border-radius:16px;background:var(--gold);
+    color:#3a2c0a;font-size:20px;font-weight:900;padding:18px;cursor:pointer;transition:.15s;
+    box-shadow:0 6px 0 #b9862f;}
+  .remind .big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b9862f;}
+
+  .section-title{font-size:15px;font-weight:900;color:var(--green-deep);margin:22px 0 12px;
+    display:flex;align-items:center;gap:8px;}
+  .section-title::before{content:"";width:4px;height:16px;background:var(--gold);border-radius:2px;}
+
+  /* 药物清单 */
+  .med{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;
+    display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+  .led{width:14px;height:14px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--gold-soft);flex:none;}
+  .led.done{background:var(--ok);box-shadow:0 0 0 4px var(--ok-soft);}
+  .med .info{flex:1;}
+  .med .name{font-size:17px;font-weight:700;}
+  .med .when{font-size:13px;color:var(--muted);margin-top:3px;}
+  .med .confirm{border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:900;
+    cursor:pointer;background:var(--green);color:#fff;flex:none;}
+  .med .confirm:disabled{background:#C9CDBF;cursor:default;}
+  .med .done-badge{font-size:14px;font-weight:700;color:var(--ok);flex:none;}
+
+  /* 血压录入 */
+  .bp{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;}
+  .bp .row{display:flex;gap:12px;}
+  .bp .field{flex:1;}
+  .bp label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  .bp input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px 12px;
+    font-size:22px;font-weight:900;color:var(--green-deep);font-family:"Noto Serif SC",serif;background:#fff;}
+  .bp .save{margin-top:14px;width:100%;border:0;border-radius:14px;background:var(--gold);
+    color:#3a2c0a;font-size:17px;font-weight:900;padding:15px;cursor:pointer;}
+  .bp .hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6;}
+
+  /* 家属端 */
+  .family-head{display:flex;justify-content:space-between;align-items:flex-end;}
+  .stat-row{display:flex;gap:12px;margin:16px 0;}
+  .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;}
+  .stat .num{font-family:"Noto Serif SC",serif;font-size:24px;font-weight:900;color:var(--green-deep);}
+  .stat .num small{font-size:12px;color:var(--muted);font-family:"Noto Sans SC",sans-serif;font-weight:400;}
+  .stat .lab{font-size:12px;color:var(--muted);margin-top:4px;}
+
+  .alert{border-radius:14px;padding:14px 16px;font-size:14px;line-height:1.6;margin-bottom:10px;display:flex;gap:10px;}
+  .alert.warn{background:var(--red-soft);color:#8f3a30;}
+  .alert.good{background:var(--ok-soft);color:#2c6043;}
+  .alert .dot{width:8px;height:8px;border-radius:50%;background:currentColor;margin-top:7px;flex:none;}
+
+  .chart-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .chart-card h3{font-size:14px;color:var(--green-deep);margin-bottom:10px;}
+  .legend{font-size:11px;color:var(--muted);margin-top:8px;}
+
+  .log{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 16px;}
+  .log-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .log-item:last-child{border-bottom:0;}
+  .log-item .l{display:flex;gap:10px;align-items:center;}
+  .log-item .ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:900;flex:none;}
+  .ic.med{background:var(--gold-soft);color:#8a6316;}
+  .ic.bp{background:#DCE7EF;color:#2c5a78;}
+  .log-item .t{font-size:12px;color:var(--muted);}
+  .log-item .v{font-weight:700;}
+  .log-item .v.bad{color:var(--red);}
+
+  footer{padding:18px;text-align:center;font-size:11px;color:var(--muted);}
+  .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);
+    background:var(--green-deep);color:#fff;padding:12px 22px;border-radius:999px;font-size:14px;
+    opacity:0;pointer-events:none;transition:.25s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:480px){
+    .stage{box-shadow:none;}
+    .hello{font-size:23px;}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="brand">
+      <h1>安享晨光</h1>
+      <small>用药与血压守护</small>
+    </div>
+    <div class="switch">
+      <button id="tabElderly" class="on" onclick="go('elderly')">老人端</button>
+      <button id="tabFamily" onclick="go('family')">家属端</button>
+    </div>
+  </div>
+
+  <!-- ===================== 老人端 ===================== -->
+  <section class="view active" id="view-elderly">
+    <div class="eyebrow">今日守护</div>
+    <div class="hello" id="helloText">早上好，张爷爷</div>
+    <div class="date-line" id="dateLine"></div>
+
+    <div class="remind" id="remindCard">
+      <span class="tag">到点啦</span>
+      <div class="med-name" id="remindName">该吃降压药了</div>
+      <div class="voice">语音提醒：爷爷，到点吃第一瓶药了，灯光亮的这一瓶，拿出来吃就好。</div>
+      <button class="big-btn" onclick="confirmDose()">我已经吃药了</button>
+    </div>
+
+    <div class="section-title">今日服药安排</div>
+    <div id="medList"></div>
+
+    <div class="section-title">量完血压了？</div>
+    <div class="bp">
+      <div class="row">
+        <div class="field">
+          <label>收缩压（高压）</label>
+          <input id="bpSys" type="number" inputmode="numeric" placeholder="如 128">
+        </div>
+        <div class="field">
+          <label>舒张压（低压）</label>
+          <input id="bpDia" type="number" inputmode="numeric" placeholder="如 82">
+        </div>
+      </div>
+      <button class="save" onclick="saveBp()">自动记录血压</button>
+      <div class="hint">测完不用动笔，数据会自动存进"电子日历"，子女那边也能看到。</div>
+    </div>
+  </section>
+
+  <!-- ===================== 家属端 ===================== -->
+  <section class="view" id="view-family">
+    <div class="eyebrow">远程守护</div>
+    <div class="hello" style="font-size:22px;">父亲的今日健康</div>
+    <div class="date-line" id="dateLine2"></div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="statDose">–</div><div class="lab">今日服药</div></div>
+      <div class="stat"><div class="num" id="statBp">–</div><div class="lab">最近血压</div></div>
+    </div>
+
+    <div class="section-title">提醒与异常</div>
+    <div id="alertBox"></div>
+
+    <div class="section-title">近 7 天血压趋势</div>
+    <div class="chart-card">
+      <h3>收缩压 / 舒张压（毫米汞柱）</h3>
+      <svg id="bpChart" width="100%" height="120" viewBox="0 0 360 120" preserveAspectRatio="none"></svg>
+      <div class="legend">红线 140 为高血压警戒线 · 数据来自父亲每日自动记录</div>
+    </div>
+
+    <div class="section-title">服药记录</div>
+    <div class="log" id="logBoxMed"></div>
+    <div class="section-title">血压记录</div>
+    <div class="log" id="logBoxBp"></div>
+  </section>
+
+  <footer>安享晨光 · 让老人不用学，也能被好好照顾</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- 数据 ---------------- */
+var MEDS = [
+  {id:"m1", name:"降压药（缬沙坦）", time:"08:00"},
+  {id:"m2", name:"降糖药（二甲双胍）", time:"12:30"},
+  {id:"m3", name:"阿司匹林肠溶片", time:"20:00"}
+];
+
+function todayKey(){
+  var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+}
+function load(){
+  try{
+    var s=JSON.parse(localStorage.getItem("anxiang")||"null");
+    if(s) return s;
+  }catch(e){}
+  // 首次：预置演示数据
+  return {
+    medLog:[ {medId:"m1", at:todayKey()+" 08:12", done:true} ],
+    bpLog:[
+      {sys:145, dia:92, at:"3 天前"},
+      {sys:132, dia:85, at:"昨天 08:40"},
+      {sys:128, dia:82, at:"今天 07:50"}
+    ]
+  };
+}
+var state = load();
+function save(){ localStorage.setItem("anxiang", JSON.stringify(state)); }
+
+/* ---------------- 工具 ---------------- */
+function $(id){return document.getElementById(id);}
+function toast(msg){
+  var t=$("toast"); t.textContent=msg; t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},1800);
+}
+function fmtDate(){
+  var d=new Date(),w=["日","一","二","三","四","五","六"][d.getDay()];
+  return (d.getMonth()+1)+"月"+d.getDate()+"日 星期"+w;
+}
+
+/* ---------------- 路由 ---------------- */
+function go(v){
+  $("view-elderly").classList.toggle("active", v==="elderly");
+  $("view-family").classList.toggle("active", v==="family");
+  $("tabElderly").classList.toggle("on", v==="elderly");
+  $("tabFamily").classList.toggle("on", v==="family");
+  if(v==="family") renderFamily();
+}
+
+/* ---------------- 老人端 ---------------- */
+function isDone(medId){
+  return state.medLog.some(function(r){return r.medId===medId && r.at.indexOf(todayKey())===0;});
+}
+function renderElderly(){
+  $("dateLine").textContent=fmtDate()+" · 共 "+MEDS.length+" 次药";
+  var html="";
+  MEDS.forEach(function(m){
+    var done=isDone(m.id);
+    html+='<div class="med">'
+      +'<div class="led'+(done?" done":"")+'"></div>'
+      +'<div class="info"><div class="name">'+m.name+'</div>'
+      +'<div class="when">每天 '+m.time+'</div></div>'
+      +(done
+          ? '<div class="done-badge">已服</div>'
+          : '<button class="confirm" onclick="confirmById(\''+m.id+'\')">确认</button>')
+      +'</div>';
+  });
+  $("medList").innerHTML=html;
+  // 提醒卡：指向第一个今天还没吃的药
+  var next=MEDS.find(function(m){return !isDone(m.id);});
+  if(next){
+    $("remindName").textContent="该吃"+next.name.split("（")[0]+"了";
+  }else{
+    $("remindName").textContent="今天的药都吃完啦";
+    document.querySelector("#remindCard .voice").textContent="爷爷真棒，今天的药都按时吃了，安心出门散步吧。";
+  }
+}
+function confirmById(id){
+  var now=new Date();
+  var hh=("0"+now.getHours()).slice(-2),mm=("0"+now.getMinutes()).slice(-2);
+  state.medLog.push({medId:id, at:todayKey()+" "+hh+":"+mm, done:true});
+  save(); renderElderly();
+  toast("已记录服药时间");
+}
+function confirmDose(){
+  var next=MEDS.find(function(m){return !isDone(m.id);});
+  if(next) confirmById(next.id); else toast("今日服药已全部完成");
+}
+function saveBp(){
+  var sys=parseInt($("bpSys").value,10), dia=parseInt($("bpDia").value,10);
+  if(!sys||!dia||sys<60||sys>260||dia<30||dia>180){ toast("请填写有效血压数字"); return; }
+  var now=new Date(),hh=("0"+now.getHours()).slice(-2),mm=("0"+now.getMinutes()).slice(-2);
+  state.bpLog.unshift({sys:sys,dia:dia,at:"今天 "+hh+":"+mm});
+  save();
+  $("bpSys").value="";$("bpDia").value="";
+  toast("血压已自动记录"+((sys>=140||dia>=90)?"，已通知家属":""));
+}
+
+/* ---------------- 家属端 ---------------- */
+function renderFamily(){
+  $("dateLine2").textContent=fmtDate();
+  // 统计
+  var doneToday=MEDS.filter(function(m){return isDone(m.id);}).length;
+  $("statDose").innerHTML=doneToday+"<small> / "+MEDS.length+" 次</small>";
+  var last=state.bpLog[0];
+  $("statBp").innerHTML=last? last.sys+"/"+last.dia : "–";
+
+  // 提醒与异常
+  var alerts=[];
+  MEDS.forEach(function(m){
+    if(!isDone(m.id)) alerts.push({type:"warn",text:"父亲今天 "+m.time+" 的「"+m.name.split("（")[0]+"」还未确认服药，请留意。"});
+  });
+  state.bpLog.slice(0,2).forEach(function(b){
+    if(b.sys>=140||b.dia>=90) alerts.push({type:"warn",text:"父亲血压偏高 "+b.sys+"/"+b.dia+"（"+b.at+"），已在预警范围。"});
+  });
+  if(alerts.length===0) alerts.push({type:"good",text:"父亲今日服药、血压均正常，可放心。"});
+  var ah="";
+  alerts.forEach(function(a){
+    ah+='<div class="alert '+a.type+'"><div class="dot"></div><div>'+a.text+'</div></div>';
+  });
+  $("alertBox").innerHTML=ah;
+
+  // 血压趋势图（SVG 折线）
+  drawChart();
+
+  // 服药记录表
+  var medLog=[];
+  state.medLog.slice().reverse().slice(0,5).forEach(function(r){
+    var m=MEDS.find(function(x){return x.id===r.medId;});
+    medLog.push({ic:"med",v:m?m.name.split("（")[0]:"药",time:r.at});
+  });
+  var mh="";
+  medLog.forEach(function(it){
+    mh+='<div class="log-item"><div class="l"><div class="ic med">药</div>'
+      +'<div><div>'+it.v+'</div><div class="t">'+it.time+'</div></div></div>'
+      +'<div class="v" style="color:var(--ok);">已服</div></div>';
+  });
+  $("logBoxMed").innerHTML=mh||'<div style="padding:14px 0;font-size:13px;color:var(--muted);">暂无服药记录</div>';
+
+  // 血压记录表
+  var bpLog=state.bpLog.slice(0,5);
+  var bh="";
+  bpLog.forEach(function(b){
+    var bad=(b.sys>=140||b.dia>=90);
+    bh+='<div class="log-item"><div class="l"><div class="ic bp">压</div>'
+      +'<div><div>'+b.sys+'/'+b.dia+' mmHg</div><div class="t">'+b.at+'</div></div></div>'
+      +'<div class="v'+(bad?" bad":"")+'">'+(bad?"偏高":"正常")+'</div></div>';
+  });
+  $("logBoxBp").innerHTML=bh||'<div style="padding:14px 0;font-size:13px;color:var(--muted);">暂无血压记录</div>';
+}
+
+function drawChart(){
+  var data=state.bpLog.slice(0,7).reverse();
+  var svg=$("bpChart"); svg.innerHTML="";
+  if(!data.length) return;
+  var W=360,H=120,pad=10;
+  var max=180,min=60;
+  function y(v){return H-pad-(v-min)/(max-min)*(H-pad*2);}
+  // 警戒线 140
+  var ly=y(140);
+  svg.innerHTML+='<line x1="0" y1="'+ly+'" x2="'+W+'" y2="'+ly+'" stroke="#C2574A" stroke-width="1" stroke-dasharray="4 4"/>';
+  svg.innerHTML+='<text x="2" y="'+(ly-3)+'" font-size="9" fill="#C2574A">140</text>';
+  var step=W/(Math.max(data.length-1,1));
+  var sp="",dp="";
+  data.forEach(function(b,i){
+    var x=step*i, ys=y(b.sys), yd=y(b.dia);
+    sp+=(i===0?"M":"L")+x+","+ys+" ";
+    dp+=(i===0?"M":"L")+x+","+yd+" ";
+  });
+  svg.innerHTML+='<path d="'+sp+'" fill="none" stroke="#2F5D50" stroke-width="2"/>';
+  svg.innerHTML+='<path d="'+dp+'" fill="none" stroke="#D9A441" stroke-width="2"/>';
+  data.forEach(function(b,i){
+    var x=step*i;
+    svg.innerHTML+='<circle cx="'+x+'" cy="'+y(b.sys)+'" r="2.5" fill="#2F5D50"/>';
+  });
+}
+
+/* ---------------- 初始化 ---------------- */
+renderElderly();
+</script>
+</body>
+</html>
